@@ -62,21 +62,25 @@ function LoginPage() {
             One console for your entire fleet.
           </h2>
           <p className="text-sm text-muted-foreground">
-            Register vehicles, dispatch trips, log maintenance and fuel, and watch operational
-            KPIs — all with role-based access.
+            Register vehicles, dispatch trips, log maintenance and fuel, and watch operational KPIs
+            — all with role-based access.
           </p>
           <ul className="text-sm space-y-2">
             <li className="flex items-center gap-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-primary" /> Fleet Manager · fleet & lifecycle
+              <span className="h-1.5 w-1.5 rounded-full bg-primary" /> Fleet Manager · fleet &
+              lifecycle
             </li>
             <li className="flex items-center gap-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-primary" /> Dispatcher · trip creation & dispatch
+              <span className="h-1.5 w-1.5 rounded-full bg-primary" /> Dispatcher · trip creation &
+              dispatch
             </li>
             <li className="flex items-center gap-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-primary" /> Safety Officer · licensing & scores
+              <span className="h-1.5 w-1.5 rounded-full bg-primary" /> Safety Officer · licensing &
+              scores
             </li>
             <li className="flex items-center gap-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-primary" /> Financial Analyst · fuel & cost analysis
+              <span className="h-1.5 w-1.5 rounded-full bg-primary" /> Financial Analyst · fuel &
+              cost analysis
             </li>
           </ul>
         </div>

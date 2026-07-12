@@ -48,10 +48,26 @@ function DashboardPage() {
   const recentTrips = trips.slice(-5).reverse();
 
   const statusBreakdown = [
-    { label: "Available", value: vehicles.filter((v) => v.status === "Available").length, color: "bg-success" },
-    { label: "On Trip", value: vehicles.filter((v) => v.status === "On Trip").length, color: "bg-info" },
-    { label: "In Shop", value: vehicles.filter((v) => v.status === "In Shop").length, color: "bg-warning" },
-    { label: "Retired", value: vehicles.filter((v) => v.status === "Retired").length, color: "bg-destructive" },
+    {
+      label: "Available",
+      value: vehicles.filter((v) => v.status === "Available").length,
+      color: "bg-success",
+    },
+    {
+      label: "On Trip",
+      value: vehicles.filter((v) => v.status === "On Trip").length,
+      color: "bg-info",
+    },
+    {
+      label: "In Shop",
+      value: vehicles.filter((v) => v.status === "In Shop").length,
+      color: "bg-warning",
+    },
+    {
+      label: "Retired",
+      value: vehicles.filter((v) => v.status === "Retired").length,
+      color: "bg-destructive",
+    },
   ];
   const totalV = vehicles.length || 1;
 
@@ -65,9 +81,24 @@ function DashboardPage() {
 
         {/* Filters */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <Select label="Vehicle type" value={vType} onChange={setVType} options={["all", ...Array.from(new Set(vehicles.map((v) => v.type)))]} />
-          <Select label="Status" value={vStatus} onChange={setVStatus} options={["all", "Available", "On Trip", "In Shop", "Retired"]} />
-          <Select label="Region" value={region} onChange={setRegion} options={["all", ...Array.from(new Set(vehicles.map((v) => v.region)))]} />
+          <Select
+            label="Vehicle type"
+            value={vType}
+            onChange={setVType}
+            options={["all", ...Array.from(new Set(vehicles.map((v) => v.type)))]}
+          />
+          <Select
+            label="Status"
+            value={vStatus}
+            onChange={setVStatus}
+            options={["all", "Available", "On Trip", "In Shop", "Retired"]}
+          />
+          <Select
+            label="Region"
+            value={region}
+            onChange={setRegion}
+            options={["all", ...Array.from(new Set(vehicles.map((v) => v.region)))]}
+          />
         </div>
 
         {/* KPI grid */}
@@ -76,7 +107,9 @@ function DashboardPage() {
             <div key={k.label} className="card-surface p-4">
               <k.Icon className={`h-4 w-4 ${k.tone}`} />
               <div className="mt-3 text-2xl font-display font-semibold">{k.value}</div>
-              <div className="text-[11px] uppercase tracking-wider text-muted-foreground mt-1">{k.label}</div>
+              <div className="text-[11px] uppercase tracking-wider text-muted-foreground mt-1">
+                {k.label}
+              </div>
             </div>
           ))}
         </div>
@@ -131,7 +164,10 @@ function DashboardPage() {
                     <span className="font-medium">{s.value}</span>
                   </div>
                   <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
-                    <div className={`h-full ${s.color}`} style={{ width: `${(s.value / totalV) * 100}%` }} />
+                    <div
+                      className={`h-full ${s.color}`}
+                      style={{ width: `${(s.value / totalV) * 100}%` }}
+                    />
                   </div>
                 </div>
               ))}
@@ -143,7 +179,17 @@ function DashboardPage() {
   );
 }
 
-function Select({ label, value, onChange, options }: { label: string; value: string; onChange: (v: string) => void; options: string[] }) {
+function Select({
+  label,
+  value,
+  onChange,
+  options,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  options: string[];
+}) {
   return (
     <label className="block">
       <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">{label}</div>

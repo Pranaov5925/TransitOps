@@ -7,7 +7,8 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   useEffect(() => {
-    const raw = typeof window !== "undefined" ? window.localStorage.getItem("transitops.user") : null;
+    const raw =
+      typeof window !== "undefined" ? window.localStorage.getItem("transitops.user") : null;
     window.location.replace(raw ? "/dashboard" : "/login");
   }, []);
   return (

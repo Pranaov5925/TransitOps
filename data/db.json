@@ -1,0 +1,42 @@
+{
+  "auth_users": [
+    {
+      "id": "u1",
+      "email": "alex@transitops.co",
+      "passwordHash": "$2a$10$HzDukgO8xVfsCO7CwzSE0uBHHCciQplPyBV4XmjeKOxrZH8F0DsbW",
+      "role": "Fleet Manager",
+      "createdAt": "2026-07-12T09:58:41.250Z",
+      "updatedAt": "2026-07-12T09:58:41.251Z"
+    },
+    {
+      "id": "u2",
+      "email": "dispatcher@transitops.co",
+      "passwordHash": "$2a$10$HzDukgO8xVfsCO7CwzSE0uBHHCciQplPyBV4XmjeKOxrZH8F0DsbW",
+      "role": "Dispatcher",
+      "createdAt": "2026-07-12T09:58:41.251Z",
+      "updatedAt": "2026-07-12T09:58:41.251Z"
+    },
+    {
+      "id": "u3",
+      "email": "safety@transitops.co",
+      "passwordHash": "$2a$10$HzDukgO8xVfsCO7CwzSE0uBHHCciQplPyBV4XmjeKOxrZH8F0DsbW",
+      "role": "Safety Officer",
+      "createdAt": "2026-07-12T09:58:41.251Z",
+      "updatedAt": "2026-07-12T09:58:41.251Z"
+    },
+    {
+      "id": "u4",
+      "email": "finance@transitops.co",
+      "passwordHash": "$2a$10$HzDukgO8xVfsCO7CwzSE0uBHHCciQplPyBV4XmjeKOxrZH8F0DsbW",
+      "role": "Financial Analyst",
+      "createdAt": "2026-07-12T09:58:41.251Z",
+      "updatedAt": "2026-07-12T09:58:41.251Z"
+    }
+  ],
+  "vehicles": [],
+  "drivers": [],
+  "trips": [],
+  "maintenance_logs": [],
+  "fuel_logs": [],
+  "expenses": []
+}

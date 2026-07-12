@@ -6,6 +6,8 @@ import { useState } from "react";
 import { Plus } from "lucide-react";
 import { Modal, Field, SelectField } from "./_authenticated.fleet";
 import type { DriverStatus } from "@/lib/types";
+import { getPermission } from "@/lib/rbac";
+import { AccessDenied } from "@/components/access-denied";
 
 export const Route = createFileRoute("/_authenticated/drivers")({
   head: () => ({ meta: [{ title: "Drivers — TransitOps" }] }),
@@ -13,7 +15,8 @@ export const Route = createFileRoute("/_authenticated/drivers")({
 });
 
 function DriversPage() {
-  const { drivers, addDriver, updateDriver, deleteDriver } = useStore();
+  const { drivers, addDriver, updateDriver, deleteDriver, user } = useStore();
+  const perm = getPermission(user?.role, "Drivers");
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
     name: "",
@@ -25,11 +28,27 @@ function DriversPage() {
     status: "Available" as DriverStatus,
   });
 
+  if (perm === "-") {
+    return (
+      <AppShell title="Drivers">
+        <AccessDenied />
+      </AppShell>
+    );
+  }
+
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     addDriver(form);
     setOpen(false);
-    setForm({ name: "", licenseNumber: "", licenseCategory: "B", licenseExpiry: "2027-01-01", contact: "", safetyScore: 80, status: "Available" });
+    setForm({
+      name: "",
+      licenseNumber: "",
+      licenseCategory: "B",
+      licenseExpiry: "2027-01-01",
+      contact: "",
+      safetyScore: 80,
+      status: "Available",
+    });
   };
 
   const now = new Date();
@@ -40,14 +59,18 @@ function DriversPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="font-display text-2xl font-semibold">Drivers & Safety Profiles</h1>
-            <p className="text-sm text-muted-foreground">Track compliance, licenses, and safety scores.</p>
+            <p className="text-sm text-muted-foreground">
+              Track compliance, licenses, and safety scores.
+            </p>
           </div>
-          <button
-            onClick={() => setOpen(true)}
-            className="inline-flex items-center gap-1.5 h-9 px-3 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:brightness-110"
-          >
-            <Plus className="h-4 w-4" /> Add Driver
-          </button>
+          {perm === "RW" && (
+            <button
+              onClick={() => setOpen(true)}
+              className="inline-flex items-center gap-1.5 h-9 px-3 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:brightness-110"
+            >
+              <Plus className="h-4 w-4" /> Add Driver
+            </button>
+          )}
         </div>
 
         <div className="card-surface overflow-hidden">
@@ -73,7 +96,9 @@ function DriversPage() {
                       <td className="px-4 py-3 font-medium">{d.name}</td>
                       <td className="px-4 py-3 text-muted-foreground">{d.licenseNumber}</td>
                       <td className="px-4 py-3 text-muted-foreground">{d.licenseCategory}</td>
-                      <td className={`px-4 py-3 ${expired ? "text-destructive" : "text-muted-foreground"}`}>
+                      <td
+                        className={`px-4 py-3 ${expired ? "text-destructive" : "text-muted-foreground"}`}
+                      >
                         {d.licenseExpiry} {expired && "· expired"}
                       </td>
                       <td className="px-4 py-3 text-muted-foreground">{d.contact}</td>
@@ -88,18 +113,29 @@ function DriversPage() {
                         <StatusPill value={d.status} />
                       </td>
                       <td className="px-4 py-3 text-right space-x-2">
-                        <select
-                          value={d.status}
-                          onChange={(e) => updateDriver(d.id, { status: e.target.value as DriverStatus })}
-                          className="h-8 px-2 rounded-md bg-input border border-border text-xs"
-                        >
-                          {["Available", "On Trip", "Off Duty", "Suspended"].map((s) => (
-                            <option key={s}>{s}</option>
-                          ))}
-                        </select>
-                        <button onClick={() => deleteDriver(d.id)} className="text-xs text-destructive hover:underline">
-                          Delete
-                        </button>
+                        {perm === "RW" ? (
+                          <>
+                            <select
+                              value={d.status}
+                              onChange={(e) =>
+                                updateDriver(d.id, { status: e.target.value as DriverStatus })
+                              }
+                              className="h-8 px-2 rounded-md bg-input border border-border text-xs"
+                            >
+                              {["Available", "On Trip", "Off Duty", "Suspended"].map((s) => (
+                                <option key={s}>{s}</option>
+                              ))}
+                            </select>
+                            <button
+                              onClick={() => deleteDriver(d.id)}
+                              className="text-xs text-destructive hover:underline"
+                            >
+                              Delete
+                            </button>
+                          </>
+                        ) : (
+                          <span className="text-xs text-muted-foreground italic">Read-only</span>
+                        )}
                       </td>
                     </tr>
                   );
@@ -116,18 +152,52 @@ function DriversPage() {
       {open && (
         <Modal title="Add Driver" onClose={() => setOpen(false)}>
           <form onSubmit={submit} className="space-y-3">
-            <Field label="Full Name" value={form.name} onChange={(v) => setForm({ ...form, name: v })} required />
+            <Field
+              label="Full Name"
+              value={form.name}
+              onChange={(v) => setForm({ ...form, name: v })}
+              required
+            />
             <div className="grid grid-cols-2 gap-3">
-              <Field label="License Number" value={form.licenseNumber} onChange={(v) => setForm({ ...form, licenseNumber: v })} required />
-              <SelectField label="Category" value={form.licenseCategory} onChange={(v) => setForm({ ...form, licenseCategory: v })} options={["A", "B", "C", "D"]} />
+              <Field
+                label="License Number"
+                value={form.licenseNumber}
+                onChange={(v) => setForm({ ...form, licenseNumber: v })}
+                required
+              />
+              <SelectField
+                label="Category"
+                value={form.licenseCategory}
+                onChange={(v) => setForm({ ...form, licenseCategory: v })}
+                options={["A", "B", "C", "D"]}
+              />
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <Field label="License Expiry" type="date" value={form.licenseExpiry} onChange={(v) => setForm({ ...form, licenseExpiry: v })} />
-              <Field label="Contact" value={form.contact} onChange={(v) => setForm({ ...form, contact: v })} />
+              <Field
+                label="License Expiry"
+                type="date"
+                value={form.licenseExpiry}
+                onChange={(v) => setForm({ ...form, licenseExpiry: v })}
+              />
+              <Field
+                label="Contact"
+                value={form.contact}
+                onChange={(v) => setForm({ ...form, contact: v })}
+              />
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <Field label="Safety Score" type="number" value={String(form.safetyScore)} onChange={(v) => setForm({ ...form, safetyScore: Number(v) })} />
-              <SelectField label="Status" value={form.status} onChange={(v) => setForm({ ...form, status: v as DriverStatus })} options={["Available", "On Trip", "Off Duty", "Suspended"]} />
+              <Field
+                label="Safety Score"
+                type="number"
+                value={String(form.safetyScore)}
+                onChange={(v) => setForm({ ...form, safetyScore: Number(v) })}
+              />
+              <SelectField
+                label="Status"
+                value={form.status}
+                onChange={(v) => setForm({ ...form, status: v as DriverStatus })}
+                options={["Available", "On Trip", "Off Duty", "Suspended"]}
+              />
             </div>
             <button className="w-full h-10 rounded-md bg-primary text-primary-foreground font-semibold hover:brightness-110">
               Save Driver

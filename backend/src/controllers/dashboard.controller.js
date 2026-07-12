@@ -14,7 +14,15 @@ async function getKpis(_req, res) {
     const driversOnDuty = drivers.filter((d) => d.status === "On Trip").length;
     const utilization = active ? Math.round(((active - available) / active) * 100) : 0;
 
-    return res.json({ active, available, inMaintenance, activeTrips, pendingTrips, driversOnDuty, utilization });
+    return res.json({
+      active,
+      available,
+      inMaintenance,
+      activeTrips,
+      pendingTrips,
+      driversOnDuty,
+      utilization,
+    });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: "Internal server error." });

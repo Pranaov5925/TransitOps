@@ -13,12 +13,12 @@ INSERT INTO auth_users (id, email, passwordHash, role) VALUES
   ('u4', 'finance@transitops.co',     '$2a$10$hB8BjLjcGSDEUmFtSkcSgeCIOm4/xZUc7cITPj3KQGFbUdi3yKJo6', 'Financial Analyst');
 
 -- Vehicles
-INSERT INTO vehicles (id, regNumber, model, `type`, capacityKg, odometer, cost, `status`, region) VALUES
-  ('v1', 'GCU-11602', 'Van-05',   'Van',   500,  47000,  620000,  'Available', 'North'),
-  ('v2', 'GCU-BM19',  'Truck-11', 'Truck', 5000, 128000, 3120000, 'On Trip',   'South'),
-  ('v3', 'GCU-BM50',  'Van-08',   'Van',   800,  12000,  725000,  'In Shop',   'East'),
-  ('v4', 'GCU-11629', 'Truck-06', 'Truck', 8000, 210000, 4500000, 'Retired',   'West'),
-  ('v5', 'GCU-BM09',  'Van-02',   'Van',   600,  33000,  580000,  'Available', 'North');
+INSERT INTO vehicles (id, regNumber, model, `type`, capacityKg, odometer, cost, `status`, region, permitType) VALUES
+  ('v1', 'GCU-11602', 'Van-05',   'Van',   500,  47000,  620000,  'Available', 'North', 'State'),
+  ('v2', 'GCU-BM19',  'Truck-11', 'Truck', 5000, 128000, 3120000, 'On Trip',   'South', 'National'),
+  ('v3', 'GCU-BM50',  'Van-08',   'Van',   800,  12000,  725000,  'In Shop',   'East',  'State'),
+  ('v4', 'GCU-11629', 'Truck-06', 'Truck', 8000, 210000, 4500000, 'Retired',   'West',  'National'),
+  ('v5', 'GCU-BM09',  'Van-02',   'Van',   600,  33000,  580000,  'Available', 'North', 'National');
 
 -- Drivers
 INSERT INTO drivers (id, name, licenseNumber, licenseCategory, licenseExpiry, contact, safetyScore, `status`) VALUES
@@ -28,10 +28,10 @@ INSERT INTO drivers (id, name, licenseNumber, licenseCategory, licenseExpiry, co
   ('d4', 'Ravi Kumar', 'DL-9911002', 'D', '2024-12-01', '+91 90000 11111', 61, 'Suspended');
 
 -- Trips
-INSERT INTO trips (id, code, source, destination, vehicleId, driverId, cargoKg, distanceKm, `status`, createdAt, fuelUsedL) VALUES
-  ('t1', 'TR001', 'Warehouse A', 'Depot 12',  'v2', 'd2', 3800, 210, 'Dispatched', '2025-07-08', NULL),
-  ('t2', 'TR002', 'Warehouse B', 'Retail 04', 'v1', 'd1', 420,  88,  'Completed',  '2025-07-06', 11),
-  ('t3', 'TR003', 'Warehouse A', 'Retail 09', 'v5', 'd3', 300,  45,  'Draft',      '2025-07-11', NULL);
+INSERT INTO trips (id, code, source, sourceState, destination, destinationState, vehicleId, driverId, cargoKg, distanceKm, `status`, createdAt, fuelUsedL) VALUES
+  ('t1', 'TR001', 'Warehouse A', 'Delhi', 'Depot 12', 'Delhi', 'v2', 'd2', 3800, 210, 'Dispatched', '2025-07-08', NULL),
+  ('t2', 'TR002', 'Warehouse B', 'Maharashtra', 'Retail 04', 'Maharashtra', 'v1', 'd1', 420,  88,  'Completed',  '2025-07-06', 11),
+  ('t3', 'TR003', 'Warehouse A', 'Delhi', 'Retail 09', 'Karnataka', 'v5', 'd3', 300,  45,  'Draft',      '2025-07-11', NULL);
 
 -- Maintenance Logs
 INSERT INTO maintenance_logs (id, vehicleId, `type`, cost, `date`, `status`) VALUES

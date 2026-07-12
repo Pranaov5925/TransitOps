@@ -14,6 +14,7 @@ import {
 import type { ReactNode } from "react";
 import { useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
+import { getPermission, type RbacModule } from "@/lib/rbac";
 
 const nav = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -36,12 +37,19 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
     navigate({ to: "/login" });
   };
 
+  const visibleNav = nav.filter((n) => {
+    if (n.label === "Settings") return true;
+    return getPermission(user?.role, n.label as RbacModule) !== "-";
+  });
+
   return (
     <div className="flex min-h-screen bg-background text-foreground">
       <aside className="hidden md:flex md:w-60 flex-col border-r border-sidebar-border bg-sidebar">
         <div className="px-5 py-5 border-b border-sidebar-border">
           <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-md bg-primary text-primary-foreground grid place-items-center font-bold">T</div>
+            <div className="h-8 w-8 rounded-md bg-primary text-primary-foreground grid place-items-center font-bold">
+              T
+            </div>
             <div>
               <div className="font-display font-bold leading-none">TransitOps</div>
               <div className="text-[10px] uppercase tracking-widest text-muted-foreground mt-1">
@@ -51,7 +59,7 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
           </div>
         </div>
         <nav className="flex-1 px-2 py-3 space-y-0.5">
-          {nav.map((n) => {
+          {visibleNav.map((n) => {
             const active = location.pathname.startsWith(n.to);
             const Icon = n.icon;
             return (
@@ -97,7 +105,9 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
               className="w-full h-9 pl-9 pr-3 rounded-md bg-input border border-border text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50"
             />
           </div>
-          {title && <h1 className="text-sm font-medium text-muted-foreground hidden sm:block">{title}</h1>}
+          {title && (
+            <h1 className="text-sm font-medium text-muted-foreground hidden sm:block">{title}</h1>
+          )}
           <div className="flex items-center gap-2">
             <span className="hidden sm:inline text-xs text-muted-foreground">Role</span>
             <span className="status-pill border bg-primary/15 text-primary border-primary/30">

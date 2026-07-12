@@ -13,6 +13,10 @@ export interface Vehicle {
   cost: number;
   status: VehicleStatus;
   region: string;
+  permitType: "National" | "State";
+  fastagBalance: number;
+  pucExpiry: string;
+  fcExpiry: string;
 }
 
 export interface Driver {
@@ -30,7 +34,9 @@ export interface Trip {
   id: string;
   code: string;
   source: string;
+  sourceState: string;
   destination: string;
+  destinationState: string;
   vehicleId: string;
   driverId: string;
   cargoKg: number;
@@ -38,6 +44,7 @@ export interface Trip {
   status: TripStatus;
   createdAt: string;
   fuelUsedL?: number;
+  estimatedTollCost: number;
 }
 
 export interface MaintenanceLog {
@@ -55,6 +62,8 @@ export interface FuelLog {
   liters: number;
   cost: number;
   date: string;
+  odometer: number;
+  pilferageAlert?: string;
 }
 
 export interface Expense {

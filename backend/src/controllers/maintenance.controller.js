@@ -4,9 +4,13 @@ const { v4: uuidv4 } = require("uuid");
 async function getAll(req, res) {
   try {
     const { vehicleId } = req.query;
-    let sql = "SELECT id, vehicleId, `type`, cost, `date`, `status` FROM maintenance_logs WHERE 1=1";
+    let sql =
+      "SELECT id, vehicleId, `type`, cost, `date`, `status` FROM maintenance_logs WHERE 1=1";
     const params = [];
-    if (vehicleId) { sql += " AND vehicleId = ?"; params.push(vehicleId); }
+    if (vehicleId) {
+      sql += " AND vehicleId = ?";
+      params.push(vehicleId);
+    }
     sql += " ORDER BY createdAt ASC";
     const [rows] = await db.query(sql, params);
     return res.json(rows);
@@ -21,16 +25,18 @@ async function create(req, res) {
     const { vehicleId, type, cost, date, status } = req.body;
     const id = uuidv4();
     const st = status || "Open";
+    if (cost !== undefined && Number(cost) < 0)
+      return res.status(400).json({ error: "Maintenance cost cannot be negative." });
 
     const conn = await db.getConnection();
     try {
       await conn.beginTransaction();
       await conn.query(
         "INSERT INTO maintenance_logs (id, vehicleId, `type`, cost, `date`, `status`) VALUES (?,?,?,?,?,?)",
-        [id, vehicleId, type, cost, date, st]
+        [id, vehicleId, type, cost, date, st],
       );
       if (st === "Open") {
-        await conn.query("UPDATE vehicles SET `status` = 'In Shop' WHERE id = ?", [vehicleId]);
+        await conn.query("UPDATE vehicles SET `status` = ? WHERE id = ?", ["In Shop", vehicleId]);
       }
       await conn.commit();
     } catch (e) {
@@ -40,7 +46,10 @@ async function create(req, res) {
       conn.release();
     }
 
-    const [rows] = await db.query("SELECT id, vehicleId, `type`, cost, `date`, `status` FROM maintenance_logs WHERE id = ?", [id]);
+    const [rows] = await db.query(
+      "SELECT id, vehicleId, `type`, cost, `date`, `status` FROM maintenance_logs WHERE id = ?",
+      [id],
+    );
     return res.status(201).json(rows[0]);
   } catch (err) {
     console.error(err);
@@ -61,9 +70,12 @@ async function close(req, res) {
     const conn = await db.getConnection();
     try {
       await conn.beginTransaction();
-      await conn.query("UPDATE maintenance_logs SET `status` = 'Closed' WHERE id = ?", [id]);
+      await conn.query("UPDATE maintenance_logs SET `status` = ? WHERE id = ?", ["Closed", id]);
       if (veh && veh.status !== "Retired") {
-        await conn.query("UPDATE vehicles SET `status` = 'Available' WHERE id = ?", [rec.vehicleId]);
+        await conn.query("UPDATE vehicles SET `status` = ? WHERE id = ?", [
+          "Available",
+          rec.vehicleId,
+        ]);
       }
       await conn.commit();
     } catch (e) {

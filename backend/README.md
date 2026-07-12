@@ -32,11 +32,11 @@ The API will be running at `http://localhost:4000`.
 
 ## Environment Variables
 
-| Variable | Description | Default |
-|---|---|---|
-| `DATABASE_URL` | MySQL connection string | — |
-| `JWT_SECRET` | Secret key for JWT signing | `transitops-jwt-secret-change-me-in-production` |
-| `PORT` | Server port | `4000` |
+| Variable       | Description                | Default                                         |
+| -------------- | -------------------------- | ----------------------------------------------- |
+| `DATABASE_URL` | MySQL connection string    | —                                               |
+| `JWT_SECRET`   | Secret key for JWT signing | `transitops-jwt-secret-change-me-in-production` |
+| `PORT`         | Server port                | `4000`                                          |
 
 ---
 
@@ -83,24 +83,24 @@ backend/
 
 ## Seeded Users
 
-| Email | Password | Role |
-|---|---|---|
-| `alex@transitops.co` | `demo1234` | Fleet Manager |
-| `dispatcher@transitops.co` | `demo1234` | Dispatcher |
-| `safety@transitops.co` | `demo1234` | Safety Officer |
-| `finance@transitops.co` | `demo1234` | Financial Analyst |
+| Email                      | Password   | Role              |
+| -------------------------- | ---------- | ----------------- |
+| `alex@transitops.co`       | `demo1234` | Fleet Manager     |
+| `dispatcher@transitops.co` | `demo1234` | Dispatcher        |
+| `safety@transitops.co`     | `demo1234` | Safety Officer    |
+| `finance@transitops.co`    | `demo1234` | Financial Analyst |
 
 ---
 
 ## RBAC Matrix
 
-| Resource | Fleet Manager | Dispatcher | Safety Officer | Financial Analyst |
-|---|---|---|---|---|
-| Vehicles | Full | Read | Read | Read |
-| Drivers | Full | Read | Read | Read |
-| Trips | Full | Full | Read | Read |
-| Maintenance | Full | Read | Read | Read |
-| Fuel Logs | Full | Read | Read | Full |
-| Expenses | Full | Read | Read | Full |
-| Dashboard | Read | Read | Read | Read |
-| Analytics | Read | Read | Read | Read |
+| Resource    | Fleet Manager | Dispatcher | Safety Officer | Financial Analyst |
+| ----------- | ------------- | ---------- | -------------- | ----------------- |
+| Vehicles    | Full          | Read       | Read           | Read              |
+| Drivers     | Full          | Read       | Read           | Read              |
+| Trips       | Full          | Full       | Read           | Read              |
+| Maintenance | Full          | Read       | Read           | Read              |
+| Fuel Logs   | Full          | Read       | Read           | Full              |
+| Expenses    | Full          | Read       | Read           | Full              |
+| Dashboard   | Read          | Read       | Read           | Read              |
+| Analytics   | Read          | Read       | Read           | Read              |

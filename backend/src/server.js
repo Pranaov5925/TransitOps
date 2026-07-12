@@ -11,6 +11,7 @@ const fuelRoutes = require("./routes/fuel.routes");
 const expenseRoutes = require("./routes/expense.routes");
 const dashboardRoutes = require("./routes/dashboard.routes");
 const analyticsRoutes = require("./routes/analytics.routes");
+const rbacMiddleware = require("./middleware/rbac");
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -20,6 +21,7 @@ const PORT = process.env.PORT || 4000;
 // ---------------------------------------------------------------------------
 app.use(cors());
 app.use(express.json());
+app.use(rbacMiddleware);
 
 // ---------------------------------------------------------------------------
 // Routes
