@@ -25,20 +25,19 @@ function LoginPage() {
   const [email, setEmail] = useState("alex@transitops.co");
   const [password, setPassword] = useState("demo1234");
   const [role, setRole] = useState<Role>("Fleet Manager");
-  const [attempts, setAttempts] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const locked = attempts >= 3;
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (locked) return;
     if (!email.includes("@") || password.length < 6) {
-      const next = attempts + 1;
-      setAttempts(next);
-      setError(next >= 3 ? "Account locked after 3 failed attempts." : "Invalid credentials.");
+      setError("Invalid credentials.");
       return;
     }
-    login(email, role);
+    const success = await login(email, password, role);
+    if (!success) {
+      setError("Invalid credentials.");
+      return;
+    }
     navigate({ to: "/dashboard" });
   };
 
@@ -95,7 +94,7 @@ function LoginPage() {
 
           {error && (
             <div className="rounded-md border border-destructive/40 bg-destructive/10 text-destructive px-3 py-2 text-sm">
-              {error} {attempts > 0 && attempts < 3 && `(${3 - attempts} left)`}
+              {error}
             </div>
           )}
 
@@ -108,7 +107,6 @@ function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full h-10 px-3 rounded-md bg-input border border-border focus:outline-none focus:ring-2 focus:ring-ring/50 text-sm"
-              disabled={locked}
               required
             />
           </div>
@@ -122,7 +120,6 @@ function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full h-10 px-3 rounded-md bg-input border border-border focus:outline-none focus:ring-2 focus:ring-ring/50 text-sm"
-              disabled={locked}
               required
             />
           </div>
@@ -135,7 +132,6 @@ function LoginPage() {
               value={role}
               onChange={(e) => setRole(e.target.value as Role)}
               className="w-full h-10 px-3 rounded-md bg-input border border-border focus:outline-none focus:ring-2 focus:ring-ring/50 text-sm"
-              disabled={locked}
             >
               {roles.map((r) => (
                 <option key={r} value={r}>
@@ -156,10 +152,9 @@ function LoginPage() {
 
           <button
             type="submit"
-            disabled={locked}
-            className="w-full h-10 rounded-md bg-primary text-primary-foreground font-semibold hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed transition"
+            className="w-full h-10 rounded-md bg-primary text-primary-foreground font-semibold hover:brightness-110 transition"
           >
-            {locked ? "Locked" : "Sign in"}
+            Sign in
           </button>
 
           <p className="text-xs text-muted-foreground text-center">

@@ -1,12 +1,5 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
-import {
-  initialVehicles,
-  initialDrivers,
-  initialTrips,
-  initialMaintenance,
-  initialFuel,
-  initialExpenses,
-} from "./mock-data";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { api } from "./api";
 import type {
   Vehicle,
   Driver,
@@ -18,11 +11,9 @@ import type {
   Role,
 } from "./types";
 
-const uid = () => Math.random().toString(36).slice(2, 10);
-
 interface StoreCtx {
   user: AuthUser | null;
-  login: (email: string, role: Role) => void;
+  login: (email: string, password: string, role: Role) => Promise<boolean>;
   logout: () => void;
 
   vehicles: Vehicle[];
@@ -32,24 +23,24 @@ interface StoreCtx {
   fuel: FuelLog[];
   expenses: Expense[];
 
-  addVehicle: (v: Omit<Vehicle, "id">) => string | null;
-  updateVehicle: (id: string, patch: Partial<Vehicle>) => void;
-  deleteVehicle: (id: string) => void;
+  addVehicle: (v: Omit<Vehicle, "id">) => Promise<string | null>;
+  updateVehicle: (id: string, patch: Partial<Vehicle>) => Promise<void>;
+  deleteVehicle: (id: string) => Promise<void>;
 
-  addDriver: (d: Omit<Driver, "id">) => void;
-  updateDriver: (id: string, patch: Partial<Driver>) => void;
-  deleteDriver: (id: string) => void;
+  addDriver: (d: Omit<Driver, "id">) => Promise<void>;
+  updateDriver: (id: string, patch: Partial<Driver>) => Promise<void>;
+  deleteDriver: (id: string) => Promise<void>;
 
-  createTrip: (t: Omit<Trip, "id" | "status" | "createdAt" | "code">) => { ok: boolean; error?: string };
-  dispatchTrip: (id: string) => { ok: boolean; error?: string };
-  completeTrip: (id: string, finalOdometer: number, fuelUsedL: number) => void;
-  cancelTrip: (id: string) => void;
+  createTrip: (t: Omit<Trip, "id" | "status" | "createdAt" | "code">) => Promise<{ ok: boolean; error?: string }>;
+  dispatchTrip: (id: string) => Promise<{ ok: boolean; error?: string }>;
+  completeTrip: (id: string, finalOdometer: number, fuelUsedL: number) => Promise<void>;
+  cancelTrip: (id: string) => Promise<void>;
 
-  addMaintenance: (m: Omit<MaintenanceLog, "id">) => void;
-  closeMaintenance: (id: string) => void;
+  addMaintenance: (m: Omit<MaintenanceLog, "id">) => Promise<void>;
+  closeMaintenance: (id: string) => Promise<void>;
 
-  addFuel: (f: Omit<FuelLog, "id">) => void;
-  addExpense: (e: Omit<Expense, "id">) => void;
+  addFuel: (f: Omit<FuelLog, "id">) => Promise<void>;
+  addExpense: (e: Omit<Expense, "id">) => Promise<void>;
 }
 
 const Ctx = createContext<StoreCtx | null>(null);
@@ -60,134 +51,151 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     const raw = window.localStorage.getItem("transitops.user");
     return raw ? (JSON.parse(raw) as AuthUser) : null;
   });
-  const [vehicles, setVehicles] = useState<Vehicle[]>(initialVehicles);
-  const [drivers, setDrivers] = useState<Driver[]>(initialDrivers);
-  const [trips, setTrips] = useState<Trip[]>(initialTrips);
-  const [maintenance, setMaintenance] = useState<MaintenanceLog[]>(initialMaintenance);
-  const [fuel, setFuel] = useState<FuelLog[]>(initialFuel);
-  const [expenses, setExpenses] = useState<Expense[]>(initialExpenses);
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [drivers, setDrivers] = useState<Driver[]>([]);
+  const [trips, setTrips] = useState<Trip[]>([]);
+  const [maintenance, setMaintenance] = useState<MaintenanceLog[]>([]);
+  const [fuel, setFuel] = useState<FuelLog[]>([]);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
 
-  const login = useCallback((email: string, role: Role) => {
-    const u = { email, role };
-    setUser(u);
-    if (typeof window !== "undefined") window.localStorage.setItem("transitops.user", JSON.stringify(u));
+  // ---------------------------------------------------------------------------
+  // Data fetchers
+  // ---------------------------------------------------------------------------
+  const fetchVehicles = useCallback(async () => { try { setVehicles(await api.get("/vehicles")); } catch (e) { console.error(e); } }, []);
+  const fetchDrivers = useCallback(async () => { try { setDrivers(await api.get("/drivers")); } catch (e) { console.error(e); } }, []);
+  const fetchTrips = useCallback(async () => { try { setTrips(await api.get("/trips")); } catch (e) { console.error(e); } }, []);
+  const fetchMaintenance = useCallback(async () => { try { setMaintenance(await api.get("/maintenance-logs")); } catch (e) { console.error(e); } }, []);
+  const fetchFuel = useCallback(async () => { try { setFuel(await api.get("/fuel-logs")); } catch (e) { console.error(e); } }, []);
+  const fetchExpenses = useCallback(async () => { try { setExpenses(await api.get("/expenses")); } catch (e) { console.error(e); } }, []);
+
+  const refreshAll = useCallback(async () => {
+    await Promise.all([fetchVehicles(), fetchDrivers(), fetchTrips(), fetchMaintenance(), fetchFuel(), fetchExpenses()]);
+  }, [fetchVehicles, fetchDrivers, fetchTrips, fetchMaintenance, fetchFuel, fetchExpenses]);
+
+  // Fetch everything on mount
+  useEffect(() => { refreshAll(); }, [refreshAll]);
+
+  // ---------------------------------------------------------------------------
+  // Auth
+  // ---------------------------------------------------------------------------
+  const login = useCallback(async (email: string, password: string, role: Role): Promise<boolean> => {
+    try {
+      const { data, status } = await api.post<{ user?: AuthUser; error?: string }>("/auth/login", { email, password, role });
+      if (status !== 200 || !data.user) return false;
+      setUser(data.user);
+      if (typeof window !== "undefined") window.localStorage.setItem("transitops.user", JSON.stringify(data.user));
+      return true;
+    } catch {
+      return false;
+    }
   }, []);
+
   const logout = useCallback(() => {
     setUser(null);
     if (typeof window !== "undefined") window.localStorage.removeItem("transitops.user");
   }, []);
 
-  const addVehicle: StoreCtx["addVehicle"] = (v) => {
-    // unique reg number rule
-    if (vehicles.some((x) => x.regNumber.toLowerCase() === v.regNumber.toLowerCase())) {
-      return null;
-    }
-    const id = uid();
-    setVehicles((s) => [...s, { ...v, id }]);
-    return id;
-  };
-  const updateVehicle: StoreCtx["updateVehicle"] = (id, patch) =>
-    setVehicles((s) => s.map((v) => (v.id === id ? { ...v, ...patch } : v)));
-  const deleteVehicle: StoreCtx["deleteVehicle"] = (id) =>
-    setVehicles((s) => s.filter((v) => v.id !== id));
+  // ---------------------------------------------------------------------------
+  // Vehicles
+  // ---------------------------------------------------------------------------
+  const addVehicle = useCallback(async (v: Omit<Vehicle, "id">): Promise<string | null> => {
+    const { data, status } = await api.post<Vehicle & { error?: string }>("/vehicles", v);
+    if (status === 409) return null;
+    await fetchVehicles();
+    return data.id ?? null;
+  }, [fetchVehicles]);
 
-  const addDriver: StoreCtx["addDriver"] = (d) =>
-    setDrivers((s) => [...s, { ...d, id: uid() }]);
-  const updateDriver: StoreCtx["updateDriver"] = (id, patch) =>
-    setDrivers((s) => s.map((d) => (d.id === id ? { ...d, ...patch } : d)));
-  const deleteDriver: StoreCtx["deleteDriver"] = (id) =>
-    setDrivers((s) => s.filter((d) => d.id !== id));
+  const updateVehicle = useCallback(async (id: string, patch: Partial<Vehicle>) => {
+    await api.patch(`/vehicles/${id}`, patch);
+    await fetchVehicles();
+  }, [fetchVehicles]);
 
-  const createTrip: StoreCtx["createTrip"] = (t) => {
-    const veh = vehicles.find((v) => v.id === t.vehicleId);
-    const drv = drivers.find((d) => d.id === t.driverId);
-    if (!veh || !drv) return { ok: false, error: "Vehicle and driver required." };
-    if (veh.status === "Retired" || veh.status === "In Shop")
-      return { ok: false, error: "Vehicle unavailable (In Shop or Retired)." };
-    if (veh.status === "On Trip") return { ok: false, error: "Vehicle already on a trip." };
-    if (drv.status === "On Trip") return { ok: false, error: "Driver already on a trip." };
-    if (drv.status === "Suspended") return { ok: false, error: "Driver is suspended." };
-    if (new Date(drv.licenseExpiry) < new Date())
-      return { ok: false, error: "Driver's license has expired." };
-    if (t.cargoKg > veh.capacityKg)
-      return { ok: false, error: `Cargo weight ${t.cargoKg} kg exceeds capacity ${veh.capacityKg} kg.` };
-    const code = `TR${String(trips.length + 1).padStart(3, "0")}`;
-    setTrips((s) => [
-      ...s,
-      { ...t, id: uid(), status: "Draft", createdAt: new Date().toISOString().slice(0, 10), code },
-    ]);
-    return { ok: true };
-  };
+  const deleteVehicle = useCallback(async (id: string) => {
+    await api.del(`/vehicles/${id}`);
+    await fetchVehicles();
+  }, [fetchVehicles]);
 
-  const dispatchTrip: StoreCtx["dispatchTrip"] = (id) => {
-    const trip = trips.find((t) => t.id === id);
-    if (!trip) return { ok: false, error: "Trip not found." };
-    if (trip.status !== "Draft") return { ok: false, error: "Only Draft trips can be dispatched." };
-    setTrips((s) => s.map((t) => (t.id === id ? { ...t, status: "Dispatched" } : t)));
-    updateVehicle(trip.vehicleId, { status: "On Trip" });
-    updateDriver(trip.driverId, { status: "On Trip" });
-    return { ok: true };
-  };
+  // ---------------------------------------------------------------------------
+  // Drivers
+  // ---------------------------------------------------------------------------
+  const addDriver = useCallback(async (d: Omit<Driver, "id">) => {
+    await api.post("/drivers", d);
+    await fetchDrivers();
+  }, [fetchDrivers]);
 
-  const completeTrip: StoreCtx["completeTrip"] = (id, finalOdometer, fuelUsedL) => {
-    const trip = trips.find((t) => t.id === id);
-    if (!trip) return;
-    setTrips((s) => s.map((t) => (t.id === id ? { ...t, status: "Completed", fuelUsedL } : t)));
-    updateVehicle(trip.vehicleId, { status: "Available", odometer: finalOdometer });
-    updateDriver(trip.driverId, { status: "Available" });
-  };
+  const updateDriver = useCallback(async (id: string, patch: Partial<Driver>) => {
+    await api.patch(`/drivers/${id}`, patch);
+    await fetchDrivers();
+  }, [fetchDrivers]);
 
-  const cancelTrip: StoreCtx["cancelTrip"] = (id) => {
-    const trip = trips.find((t) => t.id === id);
-    if (!trip) return;
-    const wasDispatched = trip.status === "Dispatched";
-    setTrips((s) => s.map((t) => (t.id === id ? { ...t, status: "Cancelled" } : t)));
-    if (wasDispatched) {
-      updateVehicle(trip.vehicleId, { status: "Available" });
-      updateDriver(trip.driverId, { status: "Available" });
-    }
-  };
+  const deleteDriver = useCallback(async (id: string) => {
+    await api.del(`/drivers/${id}`);
+    await fetchDrivers();
+  }, [fetchDrivers]);
 
-  const addMaintenance: StoreCtx["addMaintenance"] = (m) => {
-    setMaintenance((s) => [...s, { ...m, id: uid() }]);
-    if (m.status === "Open") updateVehicle(m.vehicleId, { status: "In Shop" });
-  };
-  const closeMaintenance: StoreCtx["closeMaintenance"] = (id) => {
-    const rec = maintenance.find((m) => m.id === id);
-    if (!rec) return;
-    setMaintenance((s) => s.map((m) => (m.id === id ? { ...m, status: "Closed" } : m)));
-    const veh = vehicles.find((v) => v.id === rec.vehicleId);
-    if (veh && veh.status !== "Retired") updateVehicle(rec.vehicleId, { status: "Available" });
-  };
+  // ---------------------------------------------------------------------------
+  // Trips
+  // ---------------------------------------------------------------------------
+  const createTrip = useCallback(async (t: Omit<Trip, "id" | "status" | "createdAt" | "code">): Promise<{ ok: boolean; error?: string }> => {
+    const { data } = await api.post<{ ok: boolean; error?: string }>("/trips", t);
+    if (data.ok) await fetchTrips();
+    return data;
+  }, [fetchTrips]);
 
-  const addFuel: StoreCtx["addFuel"] = (f) => setFuel((s) => [...s, { ...f, id: uid() }]);
-  const addExpense: StoreCtx["addExpense"] = (e) => setExpenses((s) => [...s, { ...e, id: uid() }]);
+  const dispatchTrip = useCallback(async (id: string): Promise<{ ok: boolean; error?: string }> => {
+    const { data } = await api.post<{ ok: boolean; error?: string }>(`/trips/${id}/dispatch`, {});
+    if (data.ok) await Promise.all([fetchTrips(), fetchVehicles(), fetchDrivers()]);
+    return data;
+  }, [fetchTrips, fetchVehicles, fetchDrivers]);
 
+  const completeTrip = useCallback(async (id: string, finalOdometer: number, fuelUsedL: number) => {
+    await api.post(`/trips/${id}/complete`, { finalOdometer, fuelUsedL });
+    await Promise.all([fetchTrips(), fetchVehicles(), fetchDrivers()]);
+  }, [fetchTrips, fetchVehicles, fetchDrivers]);
+
+  const cancelTrip = useCallback(async (id: string) => {
+    await api.post(`/trips/${id}/cancel`, {});
+    await Promise.all([fetchTrips(), fetchVehicles(), fetchDrivers()]);
+  }, [fetchTrips, fetchVehicles, fetchDrivers]);
+
+  // ---------------------------------------------------------------------------
+  // Maintenance
+  // ---------------------------------------------------------------------------
+  const addMaintenance = useCallback(async (m: Omit<MaintenanceLog, "id">) => {
+    await api.post("/maintenance-logs", m);
+    await Promise.all([fetchMaintenance(), fetchVehicles()]);
+  }, [fetchMaintenance, fetchVehicles]);
+
+  const closeMaintenance = useCallback(async (id: string) => {
+    await api.post(`/maintenance-logs/${id}/close`, {});
+    await Promise.all([fetchMaintenance(), fetchVehicles()]);
+  }, [fetchMaintenance, fetchVehicles]);
+
+  // ---------------------------------------------------------------------------
+  // Fuel & Expenses
+  // ---------------------------------------------------------------------------
+  const addFuel = useCallback(async (f: Omit<FuelLog, "id">) => {
+    await api.post("/fuel-logs", f);
+    await fetchFuel();
+  }, [fetchFuel]);
+
+  const addExpense = useCallback(async (e: Omit<Expense, "id">) => {
+    await api.post("/expenses", e);
+    await fetchExpenses();
+  }, [fetchExpenses]);
+
+  // ---------------------------------------------------------------------------
+  // Context value
+  // ---------------------------------------------------------------------------
   const value = useMemo<StoreCtx>(
     () => ({
-      user,
-      login,
-      logout,
-      vehicles,
-      drivers,
-      trips,
-      maintenance,
-      fuel,
-      expenses,
-      addVehicle,
-      updateVehicle,
-      deleteVehicle,
-      addDriver,
-      updateDriver,
-      deleteDriver,
-      createTrip,
-      dispatchTrip,
-      completeTrip,
-      cancelTrip,
-      addMaintenance,
-      closeMaintenance,
-      addFuel,
-      addExpense,
+      user, login, logout,
+      vehicles, drivers, trips, maintenance, fuel, expenses,
+      addVehicle, updateVehicle, deleteVehicle,
+      addDriver, updateDriver, deleteDriver,
+      createTrip, dispatchTrip, completeTrip, cancelTrip,
+      addMaintenance, closeMaintenance,
+      addFuel, addExpense,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [user, vehicles, drivers, trips, maintenance, fuel, expenses],
