@@ -13,23 +13,25 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { useStore } from "@/lib/store";
+import type { Role } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const nav = [
-  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/fleet", label: "Fleet", icon: Truck },
-  { to: "/drivers", label: "Drivers", icon: Users },
-  { to: "/trips", label: "Trips", icon: RouteIcon },
-  { to: "/maintenance", label: "Maintenance", icon: Wrench },
-  { to: "/fuel", label: "Fuel & Expenses", icon: Fuel },
-  { to: "/analytics", label: "Analytics", icon: BarChart3 },
-  { to: "/settings", label: "Settings", icon: Settings },
+  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, allowedRoles: ["Fleet Manager", "Dispatcher", "Safety Officer", "Financial Analyst"] },
+  { to: "/fleet", label: "Fleet", icon: Truck, allowedRoles: ["Fleet Manager", "Dispatcher", "Safety Officer", "Financial Analyst"] },
+  { to: "/drivers", label: "Drivers", icon: Users, allowedRoles: ["Fleet Manager", "Dispatcher", "Safety Officer"] },
+  { to: "/trips", label: "Trips", icon: RouteIcon, allowedRoles: ["Fleet Manager", "Dispatcher", "Safety Officer", "Financial Analyst"] },
+  { to: "/maintenance", label: "Maintenance", icon: Wrench, allowedRoles: ["Fleet Manager", "Safety Officer", "Financial Analyst"] },
+  { to: "/fuel", label: "Fuel & Expenses", icon: Fuel, allowedRoles: ["Fleet Manager", "Financial Analyst"] },
+  { to: "/analytics", label: "Analytics", icon: BarChart3, allowedRoles: ["Fleet Manager", "Dispatcher", "Safety Officer", "Financial Analyst"] },
+  { to: "/settings", label: "Settings", icon: Settings, allowedRoles: ["Fleet Manager", "Dispatcher", "Safety Officer", "Financial Analyst"] },
 ] as const;
 
 export function AppShell({ children, title }: { children: ReactNode; title?: string }) {
   const { user, logout } = useStore();
   const location = useLocation();
   const navigate = useNavigate();
+  const visibleNav = nav.filter((item) => user?.role && item.allowedRoles.includes(user.role as Role));
 
   const handleLogout = () => {
     logout();
@@ -51,7 +53,7 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
           </div>
         </div>
         <nav className="flex-1 px-2 py-3 space-y-0.5">
-          {nav.map((n) => {
+          {visibleNav.map((n) => {
             const active = location.pathname.startsWith(n.to);
             const Icon = n.icon;
             return (
