@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { Truck } from "lucide-react";
 import { StoreProvider, useStore } from "@/lib/store";
 import type { Role } from "@/lib/types";
 
@@ -47,7 +48,7 @@ function LoginPage() {
       <div className="hidden md:flex flex-col justify-between p-10 bg-sidebar border-r border-sidebar-border">
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-md bg-primary text-primary-foreground grid place-items-center font-bold text-lg">
-            T
+            <Truck className="h-6 w-6" strokeWidth={2.25} />
           </div>
           <div>
             <div className="font-display font-bold text-lg leading-none">TransitOps</div>

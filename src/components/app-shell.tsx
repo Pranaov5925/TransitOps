@@ -43,7 +43,9 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
       <aside className="hidden md:flex md:w-60 flex-col border-r border-sidebar-border bg-sidebar">
         <div className="px-5 py-5 border-b border-sidebar-border">
           <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-md bg-primary text-primary-foreground grid place-items-center font-bold">T</div>
+            <div className="h-8 w-8 rounded-md bg-primary text-primary-foreground grid place-items-center">
+              <Truck className="h-5 w-5" strokeWidth={2.25} />
+            </div>
             <div>
               <div className="font-display font-bold leading-none">TransitOps</div>
               <div className="text-[10px] uppercase tracking-widest text-muted-foreground mt-1">
