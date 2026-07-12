@@ -1,11 +1,18 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
+import { useEffect } from "react";
 
 export const Route = createFileRoute("/")({
-  ssr: false,
-  beforeLoad: () => {
-    if (typeof window === "undefined") return;
-    const token = window.localStorage.getItem("transitops.token");
-    throw redirect({ to: token ? "/dashboard" : "/auth" });
-  },
-  component: () => null,
+  component: Index,
 });
+
+function Index() {
+  useEffect(() => {
+    const raw = typeof window !== "undefined" ? window.localStorage.getItem("transitops.user") : null;
+    window.location.replace(raw ? "/dashboard" : "/login");
+  }, []);
+  return (
+    <div className="min-h-screen grid place-items-center bg-background text-muted-foreground text-sm">
+      Loading TransitOps…
+    </div>
+  );
+}

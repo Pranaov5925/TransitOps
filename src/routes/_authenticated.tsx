@@ -1,29 +1,27 @@
-import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
-import { useAuth } from "@/lib/auth";
-import { AppShell } from "@/components/layout/AppShell";
+import { Outlet, createFileRoute, redirect } from "@tanstack/react-router";
+import { StoreProvider, useStore } from "@/lib/store";
 
 export const Route = createFileRoute("/_authenticated")({
-  ssr: false,
-  component: AuthedLayout,
+  component: AuthLayout,
 });
 
-function AuthedLayout() {
-  const { isAuthenticated } = useAuth();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    // Read directly from storage on first mount to avoid a redirect flicker
-    // before the AuthProvider hydrates.
-    const token = typeof window !== "undefined" ? window.localStorage.getItem("transitops.token") : null;
-    if (!token && !isAuthenticated) {
-      navigate({ to: "/auth", replace: true });
-    }
-  }, [isAuthenticated, navigate]);
-
+function AuthLayout() {
   return (
-    <AppShell>
-      <Outlet />
-    </AppShell>
+    <StoreProvider>
+      <Gate />
+    </StoreProvider>
   );
 }
+
+function Gate() {
+  const { user } = useStore();
+  if (!user) {
+    // client-only redirect
+    if (typeof window !== "undefined") window.location.replace("/login");
+    return null;
+  }
+  return <Outlet />;
+}
+
+// keep redirect import used to appease TS if needed
+void redirect;
