@@ -37,7 +37,17 @@ app.use("/analytics", analyticsRoutes);
 // ---------------------------------------------------------------------------
 // Health check
 // ---------------------------------------------------------------------------
-app.get("/health", (_req, res) => res.json({ status: "ok" }));
+const db = require("./config/database");
+
+app.get("/health", async (_req, res) => {
+  try {
+    await db.query("SELECT 1");
+    res.json({ status: "ok", database: "connected" });
+  } catch (err) {
+    console.error("Database connection failed:", err);
+    res.status(500).json({ status: "error", database: "disconnected", error: err.message });
+  }
+});
 
 // ---------------------------------------------------------------------------
 // Global error handler
