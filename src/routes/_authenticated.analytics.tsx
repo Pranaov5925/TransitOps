@@ -112,7 +112,11 @@ function AnalyticsPage() {
                   <Pie data={pieData} dataKey="value" nameKey="name" outerRadius={100} label>
                     {pieData.map((_, i) => (<Cell key={i} fill={colors[i % colors.length]} />))}
                   </Pie>
-                  <Tooltip contentStyle={{ background: "oklch(0.21 0.014 260)", border: "1px solid oklch(0.3 0.015 260)", borderRadius: 8 }} />
+                  <Tooltip
+                    contentStyle={{ background: "oklch(0.21 0.014 260)", border: "1px solid oklch(0.3 0.015 260)", borderRadius: 8 }}
+                    itemStyle={{ color: "oklch(0.96 0.005 260)" }}
+                    labelStyle={{ color: "oklch(0.96 0.005 260)" }}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
